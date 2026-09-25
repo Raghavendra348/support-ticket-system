@@ -25,36 +25,32 @@ export async function apiRequest(endpoint, options = {}) {
     config.body = JSON.stringify(options.body);
   }
 
-  try {
-    const response = await fetch(url, config);
-    let data = null;
-    
-    // Attempt parsing JSON
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-    }
-
-    if (!response.ok) {
-      // If 401 unauthorized and we have a token, clear tokens
-      if (response.status === 401 && endpoint !== '/auth/login') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('auth_user');
-      }
-
-      const error = new Error(data?.message || data?.detail || `HTTP Error ${response.status}`);
-      error.status = response.status;
-      error.data = data;
-      throw error;
-    }
-
-    return data;
-  } catch (err) {
-    throw err;
+  const response = await fetch(url, config);
+  let data = null;
+  
+  // Attempt parsing JSON
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    data = await response.text();
   }
+
+  if (!response.ok) {
+    // If 401 unauthorized and we have a token, clear tokens
+    if (response.status === 401 && endpoint !== '/auth/login') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth_user');
+    }
+
+    const error = new Error(data?.message || data?.detail || `HTTP Error ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
 }
 
 export const api = {

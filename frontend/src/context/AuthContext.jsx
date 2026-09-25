@@ -1,12 +1,24 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../api/client';
 
 const AuthContext = createContext(null);
+
+function clearAuthStorage() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('auth_user');
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [tokens, setTokens] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    clearAuthStorage();
+    setUser(null);
+    setTokens(null);
+  }, []);
 
   // Initialize auth state from localStorage on mount
   useEffect(() => {
@@ -38,7 +50,7 @@ export function AuthProvider({ children }) {
     }
 
     initAuth();
-  }, []);
+  }, [logout]);
 
   const login = async (email, password) => {
     const data = await api.post('/auth/login', { email, password });
@@ -66,14 +78,6 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('auth_user');
-    setUser(null);
-    setTokens(null);
-  };
-
   const value = {
     user,
     tokens,
@@ -89,6 +93,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
