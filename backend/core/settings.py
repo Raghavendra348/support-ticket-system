@@ -70,12 +70,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database Configuration
-# 1. Check if DATABASE_URL is provided (e.g. Render/Railway/Aiven/Neon MySQL or PostgreSQL)
-# 2. Check if DB_ENGINE is explicitly sqlite or USE_SQLITE=True
-# 3. Otherwise default to MySQL with local/cloud credentials
+# Automatically detects Render/Cloud deployment vs Local MySQL
+is_render = os.getenv('RENDER', 'False').lower() in ('true', '1', 'yes')
 db_engine_env = os.getenv('DB_ENGINE', '').lower()
 use_sqlite_env = os.getenv('USE_SQLITE', 'False').lower() in ('true', '1', 'yes')
 database_url = os.getenv('DATABASE_URL')
+db_host = os.getenv('DB_HOST', '')
 
 if database_url:
     DATABASES = {
@@ -85,14 +85,29 @@ if database_url:
             ssl_require=False
         )
     }
-elif db_engine_env == 'sqlite' or use_sqlite_env:
+elif db_engine_env == 'sqlite' or use_sqlite_env or (is_render and not db_host):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-else:
+elif db_host and db_host not in ('127.0.0.1', 'localhost'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'support_ticket_db'),
+            'USER': os.getenv('DB_USER', 'root'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': db_host,
+            'PORT': os.getenv('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
+elif db_engine_env == 'mysql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -107,6 +122,30 @@ else:
             },
         }
     }
+else:
+    if is_render:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': os.getenv('DB_NAME', 'support_ticket_db'),
+                'USER': os.getenv('DB_USER', 'root'),
+                'PASSWORD': os.getenv('DB_PASSWORD', ''),
+                'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+                'PORT': os.getenv('DB_PORT', '3306'),
+                'OPTIONS': {
+                    'charset': 'utf8mb4',
+                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                },
+            }
+        }
+
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
