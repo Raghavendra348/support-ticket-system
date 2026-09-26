@@ -1,0 +1,1031 @@
+{
+  "info": {
+    "_postman_id": "8f3a9e21-bc14-4d89-9a71-1e5bfa7093b1",
+    "name": "Support Ticket Management System API",
+    "description": "Comprehensive Postman collection for the Support Ticket Management System covering Authentication, Ticket Lifecycle, Comments, Stats, Role Authorization, and Error Validations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "customer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "agent_id",
+      "value": "2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Customer Registration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Response contains tokens and user data', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tokens');",
+                  "    pm.expect(jsonData.tokens).to.have.property('access');",
+                  "    pm.expect(jsonData.user.role).to.eql('customer');",
+                  "    if (jsonData.tokens.access) {",
+                  "        pm.collectionVariables.set('customer_token', jsonData.tokens.access);",
+                  "        pm.collectionVariables.set('refresh_token', jsonData.tokens.refresh);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice.new@example.com\",\n  \"password\": \"Customer@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new customer user and returns JWT access & refresh tokens."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Customer Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Extract access token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tokens).to.have.property('access');",
+                  "    pm.collectionVariables.set('customer_token', jsonData.tokens.access);",
+                  "    pm.collectionVariables.set('refresh_token', jsonData.tokens.refresh);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"Customer@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates a customer and sets collection variable 'customer_token'."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Support Agent Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Extract agent access token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tokens).to.have.property('access');",
+                  "    pm.expect(jsonData.user.role).to.eql('agent');",
+                  "    pm.collectionVariables.set('agent_token', jsonData.tokens.access);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"agent@example.com\",\n  \"password\": \"Agent@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates a support agent and sets collection variable 'agent_token'."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Invalid Login (Wrong Password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Tests rejection of incorrect credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Refresh JWT Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns new access token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Generates a fresh JWT access token using the refresh token."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Current Authenticated User (/auth/me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns user profile details', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData.user).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Fetches profile details of the current logged-in user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "1. Create Ticket (Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Saves created ticket ID', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.status).to.eql('open');",
+                  "    pm.collectionVariables.set('ticket_id', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Billing query regarding recent invoice\",\n  \"description\": \"I was charged twice for subscription plan #4928. Kindly investigate.\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"]
+            },
+            "description": "Customer creates a support ticket with subject, description, and priority."
+          },
+          "response": []
+        },
+        {
+          "name": "2. List Tickets (Customer - Own Tickets Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns list of customer tickets', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"]
+            },
+            "description": "Fetches tickets for the logged in customer."
+          },
+          "response": []
+        },
+        {
+          "name": "3. List Tickets (Agent - With Search, Filter & Sort)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Agent can see all system tickets', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets?status=open&priority=high&ordering=-created_at&search=billing",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open"
+                },
+                {
+                  "key": "priority",
+                  "value": "high"
+                },
+                {
+                  "key": "ordering",
+                  "value": "-created_at"
+                },
+                {
+                  "key": "search",
+                  "value": "billing"
+                }
+              ]
+            },
+            "description": "Agent fetches tickets with filtering by status, priority, search text, and sorting order."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Ticket Statistics (/tickets/stats)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns count metrics', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total');",
+                  "    pm.expect(jsonData).to.have.property('open');",
+                  "    pm.expect(jsonData).to.have.property('in_progress');",
+                  "    pm.expect(jsonData).to.have.property('resolved');",
+                  "    pm.expect(jsonData).to.have.property('closed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/stats",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "stats"]
+            },
+            "description": "Returns dashboard metric aggregates for tickets."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Ticket By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Includes ticket and comment list', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.eql(parseInt(pm.collectionVariables.get('ticket_id')));",
+                  "    pm.expect(jsonData).to.have.property('comments');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}"]
+            },
+            "description": "Fetches a specific ticket with full details and its threaded comment history."
+          },
+          "response": []
+        },
+        {
+          "name": "6. Update Ticket Status (Agent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Status is updated to in_progress', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('in_progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}"]
+            },
+            "description": "Agent updates the status of a ticket to in_progress."
+          },
+          "response": []
+        },
+        {
+          "name": "7. Assign Ticket to Agent (Agent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Assigned to agent', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.assigned_to).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to_id\": {{agent_id}},\n  \"priority\": \"urgent\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}"]
+            },
+            "description": "Assigns a ticket to a support agent and updates priority."
+          },
+          "response": []
+        },
+        {
+          "name": "8. Delete Ticket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}"]
+            },
+            "description": "Deletes a ticket."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments & Responses",
+      "item": [
+        {
+          "name": "1. Add Response / Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Returns comment object', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('comment');",
+                  "    pm.expect(jsonData.user).to.have.property('name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Hello! We have reviewed your invoice and refunded the duplicate charge. Please check your bank statement.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}/comments",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}", "comments"]
+            },
+            "description": "Adds a new response comment to a ticket thread."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Ticket Comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns list of comments', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}/comments",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}", "comments"]
+            },
+            "description": "Lists all comments in the conversation thread for the given ticket."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users & Agents",
+      "item": [
+        {
+          "name": "1. List Support Agents (Agent Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns list of agents', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.collectionVariables.set('agent_id', jsonData[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{agent_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users?role=agent",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "agent"
+                }
+              ]
+            },
+            "description": "Lists all support agents available for ticket assignment."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error & Authorization Tests",
+      "item": [
+        {
+          "name": "1. Unauthorized Request (Missing Token - 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"]
+            },
+            "description": "Verifies that unauthenticated requests to protected endpoints return 401."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Forbidden Request (Customer modifying agent-only field - 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "{{ticket_id}}"]
+            },
+            "description": "Verifies that customer cannot reassign tickets."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Forbidden Request (Customer accessing agent-only /users endpoint - 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            },
+            "description": "Verifies that customers cannot query the internal user directory."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Invalid Input Validation (Missing required subject & description - 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Response includes field validation errors', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errors');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["tickets"]
+            },
+            "description": "Verifies that ticket creation without mandatory fields returns 400 Bad Request with field errors."
+          },
+          "response": []
+        },
+        {
+          "name": "5. Ticket Not Found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/999999",
+              "host": ["{{base_url}}"],
+              "path": ["tickets", "999999"]
+            },
+            "description": "Verifies that accessing a non-existent ticket returns a 404 error."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
