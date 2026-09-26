@@ -56,3 +56,25 @@ CREATE TABLE IF NOT EXISTS `ticket_comments` (
     INDEX `idx_comments_ticket_id` (`ticket_id`),
     INDEX `idx_comments_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- Section 8 — Assessment Example Database Query Requirement:
+-- "Write a query that returns all open tickets along with the customer's name
+--  and email. The query should demonstrate use of a JOIN and filtering."
+-- ============================================================================
+
+SELECT 
+    t.id AS ticket_id,
+    t.subject,
+    t.description,
+    t.priority,
+    t.status,
+    t.created_at,
+    u.id AS customer_id,
+    u.name AS customer_name,
+    u.email AS customer_email
+FROM `tickets` AS t
+INNER JOIN `users` AS u ON t.user_id = u.id
+WHERE t.status = 'open'
+ORDER BY t.created_at DESC;
+

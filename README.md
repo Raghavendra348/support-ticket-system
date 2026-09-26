@@ -171,6 +171,40 @@ The database schema and starter data are available in the [`database/`](database
 - **[`database/schema.sql`](database/schema.sql)**: Contains table definitions with foreign keys, indexes, and cascades for `users`, `tickets`, and `ticket_comments`.
 - **[`database/seed.sql`](database/seed.sql)**: Pre-populates the database with sample customer and agent users, along with realistic tickets and comments.
 
+### 🔍 Assessment Requirement (Section 8) — Example SQL Query
+> **Requirement**: *"Write a query that returns all open tickets along with the customer's name and email. The query should demonstrate use of a JOIN and filtering."*
+
+```sql
+SELECT 
+    t.id AS ticket_id,
+    t.subject,
+    t.description,
+    t.priority,
+    t.status,
+    t.created_at,
+    u.id AS customer_id,
+    u.name AS customer_name,
+    u.email AS customer_email
+FROM `tickets` AS t
+INNER JOIN `users` AS u ON t.user_id = u.id
+WHERE t.status = 'open'
+ORDER BY t.created_at DESC;
+```
+
+---
+
+## 🐳 One-Click Docker Setup (Optional)
+
+To spin up MySQL, Django Backend, and React Frontend containers with a single command:
+
+```bash
+docker-compose up --build
+```
+
+- React Frontend: `http://localhost:5173`
+- Django REST API: `http://localhost:8000/api/`
+- MySQL Database: `localhost:3306` (Pre-seeded automatically)
+
 ---
 
 ## ⚛️ Frontend Setup & Run
