@@ -4,6 +4,15 @@ A production-ready full-stack Support Ticket Management web application built wi
 
 ---
 
+## 🌐 Live Deployment URLs
+
+- **🖥️ Live Frontend (Vercel)**: [https://frontend-chi-seven-98.vercel.app](https://frontend-chi-seven-98.vercel.app)
+- **⚙️ Live Backend API (Render)**: [https://support-ticket-system-4-7jhh.onrender.com/api/](https://support-ticket-system-4-7jhh.onrender.com/api/)
+- **👑 Django Admin Portal**: [https://support-ticket-system-4-7jhh.onrender.com/admin/](https://support-ticket-system-4-7jhh.onrender.com/admin/)
+- **📦 GitHub Repository**: [https://github.com/Raghavendra348/support-ticket-system](https://github.com/Raghavendra348/support-ticket-system)
+
+---
+
 ## 📌 Table of Contents
 1. [Project Overview](#-project-overview)
 2. [Tech Stack](#-tech-stack)
