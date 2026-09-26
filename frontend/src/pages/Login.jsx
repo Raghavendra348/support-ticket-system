@@ -57,6 +57,13 @@ export default function Login() {
     }
   };
 
+  const handleDemoFill = (demoEmail, demoPassword) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setErrors({});
+    setServerError('');
+  };
+
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
@@ -110,6 +117,29 @@ export default function Login() {
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {/* Demo Credentials for Fast Evaluation */}
+        <div className="demo-box">
+          <div className="demo-title">⚡ Quick Test Credentials</div>
+          <div className="demo-buttons">
+            <button
+              type="button"
+              className="demo-btn"
+              onClick={() => handleDemoFill('agent@example.com', 'Agent@123')}
+            >
+              <strong>Support Agent</strong>
+              <span>agent@example.com</span>
+            </button>
+            <button
+              type="button"
+              className="demo-btn"
+              onClick={() => handleDemoFill('customer@example.com', 'Customer@123')}
+            >
+              <strong>Customer</strong>
+              <span>customer@example.com</span>
+            </button>
+          </div>
+        </div>
 
         <div className="auth-footer">
           Don't have an account? <Link to="/register">Create Customer Account</Link>
